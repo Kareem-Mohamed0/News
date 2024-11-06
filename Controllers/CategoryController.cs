@@ -16,39 +16,88 @@ namespace News.Controllers
         {
             this.categoryRepository = categoryRepository;
         }
+
         [HttpPost]
-        public IActionResult AddCategory(CategoryDTO categoryDTO)
+        public IActionResult AddCategory([FromBody] CategoryDTO categoryDTO)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             Category category = new()
             {
                 Description = categoryDTO.Description,
                 Name = categoryDTO.Name
             };
+
             categoryRepository.Add(category);
-            return Created();
+            return Ok("The Category Added Successfully");
         }
-        [HttpGet]
-        [Route("GetAllCategories")]
+
+        [HttpGet("GetAllCategories")]
         public IActionResult GetAllCategories()
         {
-            var categories = categoryRepository.GetAll().ToList();
-            return Ok(categories);
+            var categories = categoryRepository.GetAll();
+            var categoriesDto = categories.Select(c => new CategoryDTO
+            {
+                Description = c.Description,
+                Name = c.Name
+            }).ToList();
+
+            return Ok(categoriesDto);
         }
-        [HttpGet]
-        [Route("GetCategory")]
+
+        [HttpGet("GetCategory/{id:int}")]
         public IActionResult GetCategory(int id)
         {
             var category = categoryRepository.GetById(id);
-            return Ok(category);
+            if (category == null)
+            {
+                return NotFound($"Category with ID {id} not found.");
+            }
+
+            var categoryDto = new CategoryDTO
+            {
+                Description = category.Description,
+                Name = category.Name
+            };
+
+            return Ok(categoryDto);
         }
-        [HttpPut]
-        public IActionResult UpdateCategory(int id,CategoryDTO categoryDTO)
+
+        [HttpPut("{id:int}")]
+        public IActionResult UpdateCategory(int id, [FromBody] CategoryDTO categoryDTO)
         {
-            Category category = categoryRepository.GetById(id);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var category = categoryRepository.GetById(id);
+            if (category == null)
+            {
+                return NotFound($"Category with ID {id} not found.");
+            }
+
             category.Description = categoryDTO.Description;
             category.Name = categoryDTO.Name;
             categoryRepository.Update(category);
+
             return Ok(category);
+        }
+
+        [HttpDelete("{id:int}")]
+        public IActionResult DeleteCategory(int id)
+        {
+            var category = categoryRepository.GetById(id);
+            if (category == null)
+            {
+                return NotFound($"Category with ID {id} not found.");
+            }
+
+            categoryRepository.Delete(id);
+            return Ok("The category was deleted.");
         }
     }
 }

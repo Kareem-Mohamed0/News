@@ -34,47 +34,58 @@ namespace News.Repository
         public List<Article> GetByName(string ArticleTitle)
         {
             return context.Articles
-       .Where(a => a.Title.Contains(ArticleTitle, StringComparison.OrdinalIgnoreCase))
-       .ToList();
+                .Where(a => a.Title.Contains(ArticleTitle, StringComparison.OrdinalIgnoreCase))
+                .ToList();
         }
 
 
 
-        public async void Add(ArticleDTO articleDto)
+        public async Task AddAsync(ArticleDTO articleDto, IFormFile image)
         {
-          Article article = new Article();
-            article.Title = articleDto.ArticleTitle;
-            article.Content= articleDto.ArticleContent;
-            article.PublishDate = DateTime.Now;
-            article.CategoryId = articleDto.CategoryId;
-
-            if (articleDto.Image != null)
+            // Create a new Article object from the ArticleDTO
+            Article article = new Article
             {
-                // Define the path to save the images (e.g., wwwroot/images/articles)
-                string uploadFolder = Path.Combine(environment.WebRootPath, "images", "articles");
+                Title = articleDto.ArticleTitle,
+                Content = articleDto.ArticleContent,
+                PublishDate = DateTime.Now,
+                CategoryId = articleDto.CategoryId
+            };
+
+            if (image != null && image.Length > 0)
+            {
+                // Validate file extension (only allow images)
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                var fileExtension = Path.GetExtension(image.FileName).ToLower();
+                if (!allowedExtensions.Contains(fileExtension))
+                {
+                    throw new InvalidOperationException("Invalid file type. Only image files are allowed.");
+                }
+
+                // Define the path to save the images
+                string uploadFolder = Path.Combine(environment.WebRootPath, "images", "ArticleImages");
 
                 // Ensure the directory exists
                 Directory.CreateDirectory(uploadFolder);
 
-                // Create a unique filename with timestamp to avoid overwriting
-                string fileName = $"{Path.GetFileNameWithoutExtension(articleDto.Image.FileName)}_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(articleDto.Image.FileName)}";
+                // Create a unique filename with timestamp
+                string fileName = $"{Path.GetFileNameWithoutExtension(image.FileName)}_{DateTime.Now:yyyyMMddHHmmss}{fileExtension}";
                 string filePath = Path.Combine(uploadFolder, fileName);
 
                 // Save the file on the server
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    await articleDto.Image.CopyToAsync(stream);
+                    await image.CopyToAsync(stream);
                 }
 
-                // Save the relative path to the image in the database
-                article.Image = Path.Combine("images", "articles", fileName);
+                // Save the relative path to the image in the Article model
+                article.Image = Path.Combine("images", "ArticleImages", fileName);
             }
-            context.Articles.Add(article);
+
+            // Add the article to the database and save changes
+            await context.Articles.AddAsync(article);
             await context.SaveChangesAsync();
-
-
-
         }
+
 
 
         public void Update(int ArticleId, ArticleDTO articleDto)

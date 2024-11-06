@@ -37,9 +37,7 @@ namespace News.Repository
         public Category GetById(int id)
         {
             var category = context.Categories.FirstOrDefault(C => C.Id == id);
-            if (category != null)
-                return category;
-            throw new Exception(message:"No Category by this id.");
+            return category;
         }
 
         public Category GetByName(string CategoryName)

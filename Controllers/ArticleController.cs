@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using News.DTOs;
 using News.Interfaces;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace News.Controllers
 {
@@ -16,13 +17,14 @@ namespace News.Controllers
             this.articleRepository = articleRepository;
         }
         
-        [HttpGet]
+        [HttpGet("GetAllArticles")]
+
         public IActionResult GetAll() 
         {
         return Ok(articleRepository.GetAll());
         }
 
-        [HttpGet("{id:int}")]
+        [HttpGet("GetArticle/{id:int}")]
         public IActionResult GetByID(int id)
         {
             return Ok(articleRepository.GetById(id));
@@ -36,16 +38,33 @@ namespace News.Controllers
 
 
         [HttpPost]
-        public IActionResult Add([FromBody]ArticleDTO articleDTO)
+        [SwaggerOperation(Summary = "Add a new article with an image", Description = "Uploads an image along with article details.")]
+        public async Task<IActionResult> Add([FromForm] RequestDTO requestDTO)
         {
-            if (articleDTO == null) 
+            if (requestDTO == null)
             {
-                return BadRequest("ERROR !!! Please Enter Vaild Data !! ");
+                return BadRequest("ERROR !!! Please Enter Valid Data !!");
             }
 
-            articleRepository.Add(articleDTO);
-            return Ok("Article Added Successfully!!");
+            try
+            {
+                var articleDTO = new ArticleDTO
+                {
+                    ArticleTitle = requestDTO.ArticleTitle,
+                    ArticleContent = requestDTO.ArticleContent,
+                    CategoryId = requestDTO.CategoryId
+                };
+
+                await articleRepository.AddAsync(articleDTO, requestDTO.Image);
+                return Ok("Article Added Successfully!!");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
+
+
 
 
         [HttpPut("{id:int}")]
