@@ -1,6 +1,8 @@
 
 using Microsoft.EntityFrameworkCore;
 using News.Data;
+using News.Interfaces;
+using News.Repository;
 
 namespace News
 {
@@ -15,6 +17,7 @@ namespace News
             builder.Services.AddControllers();
             builder.Services.AddDbContext<NewsDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+            builder.Services.AddScoped<ICategoryRepository,CategoryRepository>();
                 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
