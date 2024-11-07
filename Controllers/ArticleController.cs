@@ -2,7 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using News.DTOs;
 using News.Interfaces;
+using News.Models;
+using News.Repository;
 using Swashbuckle.AspNetCore.Annotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace News.Controllers
 {
@@ -21,21 +24,37 @@ namespace News.Controllers
 
         public IActionResult GetAll() 
         {
-        return Ok(articleRepository.GetAll());
+            List<Article> articles = articleRepository.GetAll();
+            var articlesDTO = articles.Select(A => new GetArticleDTO
+            {
+                Id = A.Id,
+                ArticleTitle =  A.Title,
+               ArticleContent = A.Content,
+                ImagePath = A.Image,
+                CategoryId = A.CategoryId }).ToList();
+            return Ok(articlesDTO);
         }
 
         [HttpGet("GetArticle/{id:int}")]
         public IActionResult GetByID(int id)
         {
-            return Ok(articleRepository.GetById(id));
+            Article article = articleRepository.GetById(id);
+            if (article == null)
+            {
+                return NotFound($"Article with ID {id} not found.");
+            }
+            var articleDTO = new GetArticleDTO
+            {
+                Id = article.Id,
+                ArticleTitle = article.Title,
+                ArticleContent = article.Content,
+                ImagePath = article.Image,
+                CategoryId = article.CategoryId
+            };
+            return Ok(articleDTO);
         }
 
-        [HttpGet("{SearchTerm:alpha}")]
-        public IActionResult GetByName(string SearchTerm)
-        {
-            return Ok(articleRepository.GetByName(SearchTerm));
-        }
-
+       
 
         [HttpPost]
         [SwaggerOperation(Summary = "Add a new article with an image", Description = "Uploads an image along with article details.")]
@@ -67,22 +86,52 @@ namespace News.Controllers
 
 
 
+        
         [HttpPut("{id:int}")]
-        public IActionResult Edit(int id , [FromBody] ArticleDTO articleDTO)
+        [SwaggerOperation(Summary = "Update a new article with an image", Description = "Uploads an image along with article details.")]
+        public async Task<IActionResult> Edit(int id,[FromForm] RequestDTO requestDTO)
         {
-            if (articleDTO == null)
+            Article article = articleRepository.GetById(id);
+            if (article == null)
             {
-                return BadRequest("ERROR !!! Please Enter Vaild Data !! ");
+                return NotFound($"Article with ID {id} not found.");
+            }
+            if (requestDTO == null)
+            {
+                return BadRequest("ERROR !!! Please Enter Valid Data !!");
             }
 
-            articleRepository.Update(id,articleDTO);
-            return Ok("Article Updated Successfully!!");
+            try
+            {
+                var articleDTO = new ArticleDTO
+                {
+                    ArticleTitle = requestDTO.ArticleTitle,
+                    ArticleContent = requestDTO.ArticleContent,
+                    CategoryId = requestDTO.CategoryId
+                };
+
+                await articleRepository.Update(id,articleDTO, requestDTO.Image);
+                return Ok("Article Updated Successfully!!");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
+
+
+
+
 
 
         [HttpDelete("{id:int}")]
         public IActionResult Delete(int id) 
         {
+            Article article = articleRepository.GetById(id);
+            if (article == null)
+            {
+                return NotFound($"Article with ID {id} not found.");
+            }
             articleRepository.Delete(id);
             return Ok("Article Deleted Successfully!!");
         }

@@ -41,12 +41,14 @@ namespace News.Controllers
             var categories = categoryRepository.GetAll();
             var categoriesDto = categories.Select(c => new CategoryDTO
             {
+                Id = c.Id,
                 Description = c.Description,
                 Name = c.Name
             }).ToList();
 
             return Ok(categoriesDto);
         }
+
 
         [HttpGet("GetCategory/{id:int}")]
         public IActionResult GetCategory(int id)
@@ -58,7 +60,7 @@ namespace News.Controllers
             }
 
             var categoryDto = new CategoryDTO
-            {
+            {   Id = category.Id,
                 Description = category.Description,
                 Name = category.Name
             };
@@ -84,7 +86,7 @@ namespace News.Controllers
             category.Name = categoryDTO.Name;
             categoryRepository.Update(category);
 
-            return Ok(category);
+            return Ok("The Category Updated Successfully");
         }
 
         [HttpDelete("{id:int}")]
