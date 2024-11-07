@@ -27,6 +27,7 @@ namespace News.Controllers
             List<Article> articles = articleRepository.GetAll();
             var articlesDTO = articles.Select(A => new GetArticleDTO
             {
+                Id = A.Id,
                 ArticleTitle =  A.Title,
                ArticleContent = A.Content,
                 ImagePath = A.Image,
@@ -44,6 +45,7 @@ namespace News.Controllers
             }
             var articleDTO = new GetArticleDTO
             {
+                Id = article.Id,
                 ArticleTitle = article.Title,
                 ArticleContent = article.Content,
                 ImagePath = article.Image,

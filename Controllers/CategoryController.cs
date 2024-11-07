@@ -41,6 +41,7 @@ namespace News.Controllers
             var categories = categoryRepository.GetAll();
             var categoriesDto = categories.Select(c => new CategoryDTO
             {
+                Id = c.Id,
                 Description = c.Description,
                 Name = c.Name
             }).ToList();
@@ -59,7 +60,7 @@ namespace News.Controllers
             }
 
             var categoryDto = new CategoryDTO
-            {
+            {   Id = category.Id,
                 Description = category.Description,
                 Name = category.Name
             };
