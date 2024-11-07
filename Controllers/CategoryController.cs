@@ -48,6 +48,7 @@ namespace News.Controllers
             return Ok(categoriesDto);
         }
 
+
         [HttpGet("GetCategory/{id:int}")]
         public IActionResult GetCategory(int id)
         {
@@ -84,7 +85,7 @@ namespace News.Controllers
             category.Name = categoryDTO.Name;
             categoryRepository.Update(category);
 
-            return Ok(category);
+            return Ok("The Category Updated Successfully");
         }
 
         [HttpDelete("{id:int}")]
