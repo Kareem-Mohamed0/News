@@ -13,6 +13,15 @@ namespace News.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Article>()
+                .Property(x => x.Title)
+                .HasMaxLength(70)
+                .HasColumnType("text");
+
+            modelBuilder.Entity<Category>()
+                .Property(x => x.Name)
+                .HasMaxLength(50)
+                .IsRequired(true);
         }
 
     }
